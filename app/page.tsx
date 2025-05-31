@@ -179,7 +179,7 @@ const P5Visualizer = memo(function P5Visualizer() {
       // Set up audio input via Web Audio API
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then((stream) => {
-          audioContext = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
           const source = audioContext.createMediaStreamSource(stream);
           analyser = audioContext.createAnalyser();
           analyser.fftSize = 512;
