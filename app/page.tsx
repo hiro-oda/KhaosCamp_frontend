@@ -119,18 +119,23 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
 }
 
 // Memoized and callback-wrapped to prevent unnecessary re-creation
-const P5Visualizer = memo(() => {
+const P5Visualizer = memo(function P5Visualizer() {
   const sketch = useCallback((s) => {
     // Parameters for pendulums
-    let baseR1 = 150, baseR2 = 150;
+    const baseR1 = 150;
+    const baseR2 = 150;
     let r1 = baseR1, r2 = baseR2;
     const N = 30;
     const dt = 1.0;
     const DAMPING = 0.9997;
 
     // Pendulum state arrays
-    let th1 = [], th2 = [], w1 = [], w2 = [];
-    let px2 = [], py2 = [];
+    const th1 = [];
+    const th2 = [];
+    const w1 = [];
+    const w2 = [];
+    const px2 = [];
+    const py2 = [];
 
     // Buffer and center
     let cx, cy, buffer;
