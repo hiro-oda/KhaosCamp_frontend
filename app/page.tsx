@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Room, RoomEvent } from "livekit-client";
 import { useCallback, useEffect, useRef, useState, useContext, memo } from "react";
 import {ReactP5Wrapper} from '@p5-wrapper/react';
+import type { Sketch } from '@p5-wrapper/react';
 import type { ConnectionDetails } from "./api/connection-details/route";
 
 export default function Page() {
@@ -120,7 +121,7 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
 
 // Memoized and callback-wrapped to prevent unnecessary re-creation
 const P5Visualizer = memo(function P5Visualizer() {
-  const sketch = useCallback((s) => {
+  const sketch = useCallback<Sketch>((s) => {
     // Parameters for pendulums
     const baseR1 = 150;
     const baseR2 = 150;
