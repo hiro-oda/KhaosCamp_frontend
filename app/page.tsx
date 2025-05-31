@@ -12,9 +12,7 @@ import {
 } from "@livekit/components-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Room, RoomEvent } from "livekit-client";
-import { useCallback, useEffect, useRef, useState, useContext, memo } from "react";
-import {ReactP5Wrapper} from '@p5-wrapper/react';
-import type { Sketch } from '@p5-wrapper/react';
+import { useCallback, useEffect, useRef, useState, useContext} from "react";
 import type { ConnectionDetails } from "./api/connection-details/route";
 
 export default function Page() {
