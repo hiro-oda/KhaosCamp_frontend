@@ -13,7 +13,7 @@ export default memo(function P5Visualizer() {
     let r1 = baseR1, r2 = baseR2;
     const N = 30;
     const dt = 1.0;
-    const DAMPING = 0.9997;
+    const DAMPING = 0.99999;
 
     // Pendulum state arrays
     const th1 = [];
