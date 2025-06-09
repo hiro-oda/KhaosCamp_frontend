@@ -91,7 +91,7 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
               onClick={() => props.onConnectButtonClicked()}
             >
             <span>会話を始める</span>
-            <span className="text-xs tracking-wide">スピーカーをオンにしてクリック</span>
+            <span className="text-xs tracking-wide">音量を上げてからクリック</span>
             </motion.button>
           </motion.div>
         ) : (
@@ -141,7 +141,7 @@ function ControlBar(props: { onConnectButtonClicked: () => void }) {
             onClick={() => props.onConnectButtonClicked()}
           >
             <span>会話を始める</span>
-            <span className="text-xs tracking-wide">スピーカーをオンにしてクリック</span>
+            <span className="text-xs tracking-wide">音量を上げてからクリック</span>
           </motion.button>
         )}
       </AnimatePresence>
