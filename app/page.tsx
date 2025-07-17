@@ -89,7 +89,7 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
               transition={{ duration: 0.3, delay: 0.1 }}
               className="flex flex-col items-center uppercase px-4 py-2 bg-white text-black rounded-md"
             >
-            <span>エントリーワークの公開は終了いたしました。</span>
+            <span>エントリーワークは2025年7月18日をもって公開を終了いたしました。これからは分身ではなく本人としゃべりましょう！</span>
             </motion.button>
           </motion.div>
         ) : (
