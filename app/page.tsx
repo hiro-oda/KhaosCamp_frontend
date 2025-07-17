@@ -88,11 +88,8 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.1 }}
               className="flex flex-col items-center uppercase px-4 py-2 bg-white text-black rounded-md"
-{/*               onClick={() => props.onConnectButtonClicked()} */}
             >
             <span>エントリーワークの公開は終了いたしました。</span>
-{/*             <span>会話を始める</span> */}
-{/*             <span className="text-xs tracking-wide">音量を上げてからクリック</span> */}
             </motion.button>
           </motion.div>
         ) : (
