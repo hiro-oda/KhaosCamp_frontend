@@ -90,7 +90,8 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
               className="flex flex-col items-center uppercase px-4 py-2 bg-white text-black rounded-md"
               onClick={() => props.onConnectButtonClicked()}
             >
-            <span>エントリーワークは2025年7月18日をもって公開を終了いたしました。これからは分身ではなく本人としゃべりましょう！</span>
+            <span>会話を始める</span>
+            <span className="text-xs tracking-wide">音量を上げてからクリック</span>
             </motion.button>
           </motion.div>
         ) : (
