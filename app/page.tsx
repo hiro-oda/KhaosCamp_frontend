@@ -88,20 +88,14 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
     setPdfResult("");
 
     try {
-      if (!OPENAI_API_KEY) {
-        throw new Error("APIキーが設定されていません(.env.localを確認してください)");
-      }
-
-      // Assistants APIのファイル機能を利用してPDFをアップロードする実装例
       const formData = new FormData();
-      formData.append("purpose", "assistants");
+      // purposeはサーバー側で追加するので、ここではファイルだけ送る
       formData.append("file", file);
 
-      const uploadResponse = await fetch("https://api.openai.com/v1/files", {
+      // OpenAIではなく、自分のNext.jsサーバーに送る
+      const uploadResponse = await fetch("/api/upload-pdf", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
+        // APIキーなどのヘッダーは不要（サーバー側で付与するため）
         body: formData,
       });
 
@@ -112,7 +106,7 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
         setPdfResult("PDFのアップロードが完了しました！ (File ID: " + uploadData.id + ")");
       } else {
         console.error("Upload failed:", uploadData);
-        setPdfResult("エラーが発生しました: " + uploadData.error?.message);
+        setPdfResult("エラーが発生しました: " + uploadData.error);
       }
     } catch (error) {
       console.error(error);

@@ -1,0 +1,40 @@
+// app/api/upload-pdf/route.ts
+import { NextResponse } from "next/server";
+
+export async function POST(req: Request) {
+  try {
+    // フロントエンドから送られたファイルを受け取る
+    const formData = await req.formData();
+    const file = formData.get("file");
+
+    if (!file) {
+      return NextResponse.json({ error: "ファイルが見つかりません" }, { status: 400 });
+    }
+
+    // OpenAIに転送するためのFormDataを作成
+    const openAiFormData = new FormData();
+    openAiFormData.append("purpose", "assistants");
+    openAiFormData.append("file", file);
+
+    // サーバー側からOpenAIのAPIを叩く
+    const response = await fetch("https://api.openai.com/v1/files", {
+      method: "POST",
+      headers: {
+        // サーバー側なので環境変数を安全に読み込める
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+      },
+      body: openAiFormData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json({ error: data.error?.message }, { status: response.status });
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "サーバー内部エラーが発生しました" }, { status: 500 });
+  }
+}
