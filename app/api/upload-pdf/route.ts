@@ -1,10 +1,8 @@
 // app/api/upload-pdf/route.ts
 import { NextResponse } from "next/server";
 
-// 修正ポイント: 関数の中ではなく、ファイルのトップレベルで読み込む
-// これによりVercelのビルド時にライブラリが正しくサーバーレス関数に同梱されます
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const pdfParse = require("pdf-parse");
+// 修正ポイント1: Vercel上で確実に標準的なNode.jsサーバーとして動かすための記述
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
@@ -15,15 +13,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "ファイルが見つかりません" }, { status: 400 });
     }
 
-    // --- 1. PDFからテキストを抽出する処理 ---
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    
+
+    // 修正ポイント2: ビルドエラーを回避しつつ、Vercel環境で確実にモジュールを読み込む
+    const pdfParseModule = await import("pdf-parse");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfParse = (pdfParseModule as any).default || pdfParseModule;
+
     // pdf-parseを使ってテキスト化
     const pdfData = await pdfParse(buffer);
-    const extractedText = pdfData.text; // これが抽出されたテキスト
+    const extractedText = pdfData.text; 
 
-    // --- 2. OpenAIへファイルをアップロードする処理 ---
+    // OpenAIへファイルをアップロード
     const openAiFormData = new FormData();
     openAiFormData.append("purpose", "assistants");
     openAiFormData.append("file", file);
@@ -42,7 +44,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: data.error?.message }, { status: response.status });
     }
 
-    // OpenAIからのレスポンス(File IDなど)に加えて、抽出したテキストもフロントエンドに返す
     return NextResponse.json({
       ...data,
       extractedText: extractedText,
@@ -51,13 +52,17 @@ export async function POST(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("PDF Upload Error:", error);
-    // 修正ポイント: 何のエラーが起きたかブラウザの開発者ツールで確認しやすくするためにdetailsを追加
+    // 修正ポイント3: フロントエンドに詳細なエラー理由(details)を確実に返す
     return NextResponse.json(
-      { error: "サーバー内部エラーが発生しました", details: error.message }, 
+      { 
+        error: "サーバー内部エラーが発生しました", 
+        details: error instanceof Error ? error.message : String(error)
+      }, 
       { status: 500 }
     );
   }
 }
+
 
 // // app/api/upload-pdf/route.ts
 // import { NextResponse } from "next/server";
