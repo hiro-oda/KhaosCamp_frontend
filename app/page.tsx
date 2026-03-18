@@ -15,9 +15,6 @@ import { Room, RoomEvent } from "livekit-client";
 import { useCallback, useEffect, useRef, useState, useContext} from "react";
 import type { ConnectionDetails } from "./api/connection-details/route";
 
-// .env.local から直接APIキーを取得 (NEXT_PUBLIC_ プレフィックスが必要)
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-
 export default function Page() {
   const [room] = useState(new Room());
 
