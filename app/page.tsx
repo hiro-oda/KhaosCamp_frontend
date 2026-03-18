@@ -1,8 +1,6 @@
 "use client";
 
 import { CloseIcon } from "@/components/CloseIcon";
-// import { NoAgentNotification } from "@/components/NoAgentNotification";
-// import TranscriptionView from "@/components/TranscriptionView";
 import dynamic from 'next/dynamic';
 import {
   DisconnectButton,
@@ -60,6 +58,7 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
   // PDFのアップロードとAPI処理の状態管理
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
   const [pdfResult, setPdfResult] = useState<string>("");
+  const [extractedText, setExtractedText] = useState<string>(""); // 追加: 抽出したテキストを保存
 
   useEffect(() => {
     if (agentState !== "disconnected" && !hasPlayedRef.current) {
@@ -81,31 +80,50 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // ファイルサイズ制限 (4.5MB)
+    const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      setPdfResult("エラー: ファイルサイズが大きすぎます。4.5MB以下のPDFを選択してください。");
+      return;
+    }
+
     setIsProcessingPdf(true);
     setPdfResult("");
+    setExtractedText(""); // 新しいアップロード時にテキストをリセット
 
     try {
       const formData = new FormData();
-      // purposeはサーバー側で追加するので、ここではファイルだけ送る
       formData.append("file", file);
 
-      // OpenAIではなく、自分のNext.jsサーバーに送る
       const uploadResponse = await fetch("/api/upload-pdf", {
         method: "POST",
-        // APIキーなどのヘッダーは不要（サーバー側で付与するため）
         body: formData,
       });
 
-      const uploadData = await uploadResponse.json();
-
-      if (uploadResponse.ok) {
-        console.log("File uploaded successfully:", uploadData);
-        setPdfResult("PDFのアップロードが完了しました！ (File ID: " + uploadData.id + ")");
-      } else {
-        console.error("Upload failed:", uploadData);
-        setPdfResult("エラーが発生しました: " + uploadData.error);
+      if (uploadResponse.status === 413) {
+        throw new Error("ファイルサイズがVercelの上限(4.5MB)を超えています。");
       }
-    } catch (error) {
+
+      if (!uploadResponse.ok) {
+        const contentType = uploadResponse.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await uploadResponse.json();
+          throw new Error(errorData.error || "アップロードに失敗しました");
+        } else {
+          throw new Error(`サーバーエラー (${uploadResponse.status}): 処理に失敗しました`);
+        }
+      }
+
+      const uploadData = await uploadResponse.json();
+      console.log("File uploaded successfully:", uploadData);
+      setPdfResult("PDFのアップロードが完了しました！ (File ID: " + uploadData.id + ")");
+      
+      // 抽出されたテキストをStateにセット
+      if (uploadData.extractedText) {
+        setExtractedText(uploadData.extractedText);
+      }
+
+    } catch (error: unknown) {
       console.error(error);
       if (error instanceof Error) {
         setPdfResult("リクエストに失敗しました: " + error.message);
@@ -127,11 +145,9 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.09, 1.04, 0.245, 1.055] }}
-            // gap-8 を追加してPDF入力欄とボタンの間隔を確保
-            className="flex flex-col items-center justify-center h-full gap-8"
+            className="flex flex-col items-center justify-center h-full gap-8 w-full px-4"
           >
-            {/* 追加: PDFアップロードUI */}
-            <div className="flex flex-col items-center gap-4 p-6 border border-gray-700 rounded-xl bg-gray-900/50 w-full max-w-sm">
+            <div className="flex flex-col items-center gap-4 p-6 border border-gray-700 rounded-xl bg-gray-900/50 w-full max-w-lg">
               <label className="text-white text-sm font-semibold">
                 事前資料 (PDF) を読み込ませる
               </label>
@@ -142,8 +158,17 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
                 disabled={isProcessingPdf}
                 className="text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-white file:text-black hover:file:bg-gray-200 cursor-pointer disabled:opacity-50"
               />
-              {isProcessingPdf && <p className="text-sm text-gray-400">OpenAI APIで処理中...</p>}
+              {isProcessingPdf && <p className="text-sm text-gray-400">テキスト抽出・アップロード中...</p>}
               {pdfResult && <p className="text-sm text-green-400 text-center break-all">{pdfResult}</p>}
+              
+              {/* 追加: 抽出したテキストを表示するエリア */}
+              {extractedText && (
+                <div className="w-full mt-2 p-3 bg-black/50 border border-gray-600 rounded-lg max-h-48 overflow-y-auto">
+                  <p className="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
+                    {extractedText}
+                  </p>
+                </div>
+              )}
             </div>
 
             <motion.button
@@ -168,13 +193,11 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
           >
             <P5Visualizer />
             <div className="flex-1 w-full">
-              {/* <TranscriptionView /> */}
             </div>
             <div className="w-full">
               <ControlBar onConnectButtonClicked={props.onConnectButtonClicked} />
             </div>
             <RoomAudioRenderer />
-            {/* <NoAgentNotification state={agentState} /> */}
           </motion.div>
         )}
       </AnimatePresence>
@@ -182,10 +205,9 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
   );
 }
 
-// Memoized and callback-wrapped to prevent unnecessary re-creation
 const P5Visualizer = dynamic(() => import('@/components/P5Visualizer'), {
-  ssr: false,           // ← ここがポイント
-  loading: () => null,  // 省略可：ローディング UI が要るなら書く
+  ssr: false,
+  loading: () => null,
 });
 
 function ControlBar(props: { onConnectButtonClicked: () => void }) {
@@ -233,7 +255,6 @@ function onDeviceFailure(error: Error) {
     "マイクへのアクセスがまだ許可されていないようです。ブラウザの設定で「マイクを許可」にしてから、もう一度ページを読み込んでみてください。"
   );
 }
-
 
 // "use client";
 
