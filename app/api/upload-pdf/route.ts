@@ -1,7 +1,10 @@
 // app/api/upload-pdf/route.ts
 import { NextResponse } from "next/server";
 
-// 修正: 'import pdfParse from "pdf-parse";' を削除しました
+// 修正ポイント: 関数の中ではなく、ファイルのトップレベルで読み込む
+// これによりVercelのビルド時にライブラリが正しくサーバーレス関数に同梱されます
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+const pdfParse = require("pdf-parse");
 
 export async function POST(req: Request) {
   try {
@@ -15,10 +18,6 @@ export async function POST(req: Request) {
     // --- 1. PDFからテキストを抽出する処理 ---
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    
-    // 修正: ESMのimportエラーを回避するため、Node.jsのrequireを使用する
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-    const pdfParse = require("pdf-parse");
     
     // pdf-parseを使ってテキスト化
     const pdfData = await pdfParse(buffer);
@@ -48,9 +47,15 @@ export async function POST(req: Request) {
       ...data,
       extractedText: extractedText,
     });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "サーバー内部エラーが発生しました" }, { status: 500 });
+    
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    console.error("PDF Upload Error:", error);
+    // 修正ポイント: 何のエラーが起きたかブラウザの開発者ツールで確認しやすくするためにdetailsを追加
+    return NextResponse.json(
+      { error: "サーバー内部エラーが発生しました", details: error.message }, 
+      { status: 500 }
+    );
   }
 }
 
