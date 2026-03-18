@@ -114,9 +114,13 @@ function SimpleVoiceAssistant(props: { onConnectButtonClicked: () => void }) {
         console.error("Upload failed:", uploadData);
         setPdfResult("エラーが発生しました: " + uploadData.error?.message);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      setPdfResult("リクエストに失敗しました: " + error.message);
+      if (error instanceof Error) {
+        setPdfResult("リクエストに失敗しました: " + error.message);
+      } else {
+        setPdfResult("リクエストに失敗しました: 不明なエラーが発生しました");
+      }
     } finally {
       setIsProcessingPdf(false);
     }
